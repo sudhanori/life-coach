@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Life Coach</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Marked JS for Markdown Parsing -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 <script>
+  // ===== FIREBASE CONFIG =====
+  // Replace these placeholder values with your own project's config,
+  // found in Firebase Console -> Project settings -> General -> Your apps -> SDK setup.
   const firebaseConfig = {
     apiKey: "AIzaSyB5cgqhV8w2NvF_vEzN-Ws8tplSi_s4QxI",
     authDomain: "life-coach-f9cdf.firebaseapp.com",
@@ -28,22 +29,19 @@
     --ink:#8F6BAE; --ink-soft:#F3E9F8;
     --parchment:#FBF3ED; --parchment-dark:#FFFFFF; --paper-line:#F0DFD3;
     --brass:#E3A857; --brass-dark:#C98A3E;
-    --sage:#9FB6D9; --sage-dark:#4C5FA8;
+    --sage:#9FB6D9; --sage-dark:#6E8CC2;
     --rose:#E0879C; --rose-dark:#D6635F;
     --charcoal:#4B3550; --charcoal-soft:#8B7A94;
   }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--parchment);color:var(--charcoal);font-family:'Inter',sans-serif;min-height:100vh;}
   .app{max-width:960px;margin:0 auto;padding:32px 20px 60px;}
-  .masthead{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;flex-wrap:wrap;gap:8px;}
+  .masthead{display:flex;align-items:baseline;justify-content:space-between;border-bottom:none;padding-bottom:4px;flex-wrap:wrap;gap:8px;}
   .masthead h1{font-family:'Quicksand',sans-serif;font-weight:700;font-size:2.2rem;margin:0;letter-spacing:-0.01em;color:var(--charcoal);}
-  .masthead .tagline{font-size:0.88rem;color:var(--charcoal-soft);margin-top:2px;}
-  .masthead .actions{display:flex;align-items:center;gap:14px;}
-  .info-link{font-size:0.8rem;color:var(--ink);cursor:pointer;font-weight:600;text-decoration:none;background:var(--ink-soft);padding:6px 14px;border-radius:999px;transition:all 0.15s ease;}
-  .info-link:hover{background:var(--ink);color:#fff;}
+  .masthead .sub{font-family:'Inter',sans-serif;font-size:0.8rem;color:var(--charcoal-soft);letter-spacing:0.02em;}
 
-  nav.tabs{display:flex;gap:8px;padding:14px 0 8px;flex-wrap:wrap;}
-  .tab-btn{font-family:'Inter',sans-serif;font-weight:600;font-size:0.85rem;letter-spacing:0.01em;border:none;padding:11px 22px;cursor:pointer;color:var(--charcoal-soft);background:var(--ink-soft);border-radius:999px;transition:transform 0.15s ease, box-shadow 0.15s ease;}
+  nav.tabs{display:flex;gap:8px;padding:14px 0 4px;flex-wrap:wrap;}
+  .tab-btn{font-family:'Inter',sans-serif;font-weight:600;font-size:0.85rem;letter-spacing:0.01em;border:none;padding:11px 22px;cursor:pointer;color:var(--charcoal-soft);background:var(--ink-soft);border-radius:999px;opacity:1;transition:transform 0.15s ease, box-shadow 0.15s ease;}
   .tab-btn:hover{transform:translateY(-1px);}
   .tab-btn.active{color:#fff;box-shadow:0 6px 16px rgba(139,90,158,0.22);}
   .tab-btn[data-tab="coaches"].active{background:var(--ink);}
@@ -53,192 +51,181 @@
   main.page{background:var(--parchment-dark);border:1px solid var(--paper-line);border-radius:26px;padding:32px 30px 40px;min-height:480px;box-shadow:0 10px 34px rgba(139,90,158,0.09);margin-top:8px;}
   .panel{display:none;}
   .panel.active{display:block;}
-  
-  .header-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;}
-  h2.section-title{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.5rem;margin:0;color:var(--charcoal);}
-  .selection-badge{font-size:0.75rem;font-weight:700;color:var(--ink);background:var(--ink-soft);padding:4px 10px;border-radius:999px;letter-spacing:0.03em;}
+  h2.section-title{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.5rem;margin:0 0 4px;color:var(--charcoal);}
+  p.section-note{font-size:0.88rem;color:var(--charcoal-soft);margin:0 0 20px;max-width:60ch;}
 
-  /* ---- COACH CARDS ---- */
+  /* ---- COACHES TAB ---- */
   .persona-row{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
-  .persona-card{flex:1;min-width:220px;border:2px solid var(--paper-line);background:#fff;border-radius:20px;padding:18px;cursor:pointer;text-align:center;transition:all .2s ease;position:relative;}
-  .persona-card:hover{transform:translateY(-2px);border-color:var(--charcoal-soft);}
-  .persona-card.active{border-color:var(--card-accent, var(--ink));box-shadow:0 8px 24px rgba(139,90,158,0.14);}
-  .persona-card .active-indicator{position:absolute;top:12px;right:12px;width:10px;height:10px;border-radius:50%;background:var(--card-accent, var(--ink));display:none;}
-  .persona-card.active .active-indicator{display:block;}
-  .persona-card .avatar{width:64px;height:64px;margin:0 auto 10px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
-  .persona-card .avatar svg{width:64px;height:64px;}
-  .persona-card .pname{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;margin-bottom:2px;color:var(--charcoal);}
-  .persona-card .ptag{font-size:0.75rem;color:var(--charcoal-soft);letter-spacing:0.02em;}
+  .persona-card{flex:1;min-width:150px;border:2px solid transparent;background:var(--ink-soft);border-radius:20px;padding:16px;cursor:pointer;text-align:center;transition:all .15s ease;position:relative;}
+  .persona-card:hover{transform:translateY(-2px);}
+  .persona-card.active{border-color:var(--ink);background:#fff;box-shadow:0 8px 24px rgba(139,90,158,0.14);}
+  .persona-check{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--charcoal-soft);background:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;}
+  .persona-card.active .persona-check{background:var(--ink);border-color:var(--ink);}
+  .persona-card .avatar{width:72px;height:72px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(139,90,158,0.18);}
+  .persona-card .avatar svg{width:72px;height:72px;}
+  .persona-card .pname{font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:2px;color:var(--charcoal);}
+  .persona-card .ptag{font-family:'Inter',sans-serif;font-size:0.7rem;color:var(--charcoal-soft);letter-spacing:0.02em;}
 
-  /* ---- CHAT WINDOW & MULTI-PERSPECTIVE TABS ---- */
-  .chat-window{border:1px solid var(--paper-line);background:#FDF9F6;border-radius:20px;height:380px;overflow-y:auto;padding:18px;margin-bottom:14px;scrollbar-width:thin;scrollbar-color:var(--paper-line) transparent;}
-  .chat-window::-webkit-scrollbar{width:6px;}
-  .chat-window::-webkit-scrollbar-thumb{background:var(--paper-line);border-radius:10px;}
-
-  .msg{margin-bottom:16px;max-width:85%;}
+  .chat-window{border:1px solid var(--paper-line);background:#FDF9F6;border-radius:20px;height:340px;overflow-y:auto;padding:18px;margin-bottom:12px;}
+  .msg{margin-bottom:14px;max-width:80%;}
   .msg.user{margin-left:auto;text-align:right;}
-  .msg .who{font-weight:600;font-size:0.72rem;color:var(--charcoal-soft);margin-bottom:4px;display:block;}
-  .msg.user .bubble{background:var(--ink);color:#fff;border-radius:18px;border-bottom-right-radius:4px;display:inline-block;padding:12px 18px;text-align:left;font-size:0.92rem;line-height:1.5;}
-
-  /* Response Group Container for Multiple Personas */
-  .response-group{background:#fff;border:1px solid var(--paper-line);border-radius:18px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);margin-bottom:16px;}
-  .response-tabs{display:flex;background:#F8F3FA;border-bottom:1px solid var(--paper-line);padding:4px 4px 0;gap:4px;overflow-x:auto;}
-  .response-tab{padding:8px 14px;font-size:0.78rem;font-weight:600;color:var(--charcoal-soft);border:none;background:none;cursor:pointer;border-top-left-radius:10px;border-top-right-radius:10px;}
-  .response-tab.active{background:#fff;color:var(--charcoal);box-shadow:0 -2px 6px rgba(0,0,0,0.03);}
-  .response-pane{padding:16px;display:none;font-size:0.92rem;line-height:1.6;color:var(--charcoal);}
-  .response-pane.active{display:block;}
-  .response-pane p{margin:0 0 10px;}
-  .response-pane p:last-child{margin-bottom:0;}
-  .response-pane ul, .response-pane ol{margin:0 0 10px;padding-left:20px;}
-
-  /* ---- INPUT & TOOLBAR ---- */
-  .toolbar-panel{background:#F8F3FA;border:1px solid var(--paper-line);border-radius:16px;padding:14px;margin-bottom:12px;display:none;}
-  .chat-input-container{display:flex;flex-direction:column;gap:8px;}
-  .chat-input-row{display:flex;gap:8px;align-items:center;}
-  .chat-input-row input{flex:1;padding:12px 20px;border:1px solid var(--paper-line);border-radius:999px;background:#fff;color:var(--charcoal);font-size:0.92rem;}
+  .msg .bubble{display:inline-block;padding:10px 15px;font-size:0.9rem;line-height:1.5;border-radius:16px;text-align:left;}
+  .msg.user .bubble{background:var(--ink);color:#fff;border-bottom-right-radius:4px;}
+  .msg.assistant .bubble{background:#fff;border:1px solid var(--paper-line);color:var(--charcoal);border-bottom-left-radius:4px;}
+  .msg .who{font-family:'Inter',sans-serif;font-weight:600;font-size:0.68rem;color:var(--charcoal-soft);margin-bottom:3px;}
+  .chat-input-row{display:flex;gap:8px;}
+  .chat-input-row input{flex:1;padding:12px 18px;border:1px solid var(--paper-line);border-radius:999px;background:#fff;color:var(--charcoal);font-family:'Inter',sans-serif;font-size:0.9rem;}
   .chat-input-row input:focus{outline:none;border-color:var(--ink);}
-  .btn{font-weight:600;font-size:0.85rem;padding:11px 22px;border:none;cursor:pointer;color:#fff;border-radius:999px;transition:background 0.15s Ease;}
+  .btn{font-family:'Inter',sans-serif;font-weight:600;font-size:0.82rem;letter-spacing:0.01em;padding:10px 22px;border:none;cursor:pointer;color:#fff;border-radius:999px;}
   .btn.ghost{background:none;border:1px solid var(--charcoal-soft);color:var(--charcoal-soft);}
-  .btn.ghost:hover{background:var(--ink-soft);border-color:var(--ink);color:var(--ink);}
-  .mic-btn{border:none;background:var(--ink-soft);color:var(--ink);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-  .mic-btn svg{width:20px;height:20px;}
+  .btn:disabled{opacity:0.5;cursor:default;}
+  .mic-btn{border:none;background:var(--ink-soft);color:var(--ink);width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s ease,color .15s ease;}
+  .mic-btn svg{width:18px;height:18px;}
   .mic-btn:hover{background:var(--ink);color:#fff;}
   .mic-btn.listening{background:var(--rose-dark);color:#fff;animation:micPulse 1.1s infinite;}
+  .mic-btn:disabled{opacity:0.35;cursor:not-allowed;}
   @keyframes micPulse{0%{box-shadow:0 0 0 0 rgba(214,99,95,0.45);}70%{box-shadow:0 0 0 12px rgba(214,99,95,0);}100%{box-shadow:0 0 0 0 rgba(214,99,95,0);}}
+  .disclosure-inline{font-family:'Inter',sans-serif;font-size:0.72rem;color:var(--charcoal-soft);margin-top:10px;line-height:1.6;}
 
-  /* ---- JOURNAL & SHELF STYLING ---- */
+  /* ---- JOURNAL TAB ---- */
   .segmented{display:flex;gap:8px;margin-bottom:20px;}
-  .seg-btn{font-weight:600;font-size:0.8rem;padding:9px 18px;border:1px solid var(--ink);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer;}
+  .seg-btn{font-family:'Inter',sans-serif;font-weight:600;font-size:0.8rem;padding:9px 18px;border:1px solid var(--ink);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer;}
   .seg-btn.active{background:var(--ink);color:#fff;}
   .subpanel{display:none;}
   .subpanel.active{display:block;}
+
   .prompt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:20px;}
-  .prompt-card{border:1px solid var(--paper-line);background:#FDF3EE;border-radius:16px;padding:14px;cursor:pointer;}
-  .prompt-card .eyebrow{font-weight:700;font-size:0.65rem;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:5px;display:block;color:var(--rose-dark);}
+  .prompt-card{border:1px solid var(--paper-line);background:#FDF3EE;border-radius:16px;padding:14px 14px 12px;cursor:pointer;transition:transform .1s ease;}
+  .prompt-card:hover{transform:translateY(-2px);}
+  .prompt-card .eyebrow{font-family:'Inter',sans-serif;font-weight:700;font-size:0.65rem;letter-spacing:0.05em;text-transform:uppercase;display:block;margin-bottom:5px;color:var(--rose-dark);}
+  .prompt-card.selected{border-color:var(--ink);border-width:2px;}
   .prompt-card p{margin:0;font-size:0.86rem;line-height:1.4;}
-  textarea.entry{width:100%;min-height:130px;background:#fff;border:1px solid var(--paper-line);border-radius:18px;padding:15px;font-size:0.92rem;line-height:1.6;color:var(--charcoal);}
+
+  textarea.entry{width:100%;min-height:130px;background:#fff;border:1px solid var(--paper-line);border-radius:18px;padding:15px;font-family:'Inter',sans-serif;font-size:0.92rem;line-height:1.6;resize:vertical;color:var(--charcoal);}
   textarea.entry:focus{outline:none;border-color:var(--ink);}
   .save-row{display:flex;justify-content:flex-end;gap:10px;margin-top:12px;}
   .entries-list{margin-top:24px;border-top:1px solid var(--paper-line);padding-top:16px;}
   .entry-item{margin-bottom:14px;}
-  .entry-item .meta{font-size:0.72rem;color:var(--charcoal-soft);margin-bottom:3px;}
+  .entry-item .meta{font-family:'Inter',sans-serif;font-size:0.7rem;color:var(--charcoal-soft);margin-bottom:3px;}
   .entry-item p{margin:0;font-size:0.88rem;white-space:pre-wrap;}
-  .empty-note{font-size:0.85rem;color:var(--charcoal-soft);font-style:italic;padding:16px 0;text-align:center;}
+  .empty-note{font-size:0.85rem;color:var(--charcoal-soft);font-style:italic;padding:16px 0;}
 
+  .vb-form{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;margin-bottom:22px;align-items:center;}
+  .vb-form input, .vb-form select{padding:9px 13px;border:1px solid var(--paper-line);border-radius:999px;background:#fff;font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--charcoal);}
+  .vb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
+  .vb-card{position:relative;background:#fff;padding:8px 8px 28px;box-shadow:0 6px 18px rgba(139,90,158,0.14);border:1px solid var(--paper-line);border-radius:16px;}
+  .vb-card:nth-child(3n){transform:rotate(-1deg);}
+  .vb-card:nth-child(3n+1){transform:rotate(1deg);}
+  .vb-card img{width:100%;height:110px;object-fit:cover;display:block;border-radius:10px;}
+  .vb-card .cap{font-family:'Inter',sans-serif;font-size:0.72rem;color:var(--charcoal);margin-top:6px;}
+  .vb-card .cat{position:absolute;bottom:8px;left:10px;font-family:'Inter',sans-serif;font-weight:700;font-size:0.6rem;letter-spacing:0.05em;text-transform:uppercase;color:var(--brass-dark);}
+  .vb-card .del{position:absolute;top:6px;right:6px;background:rgba(75,53,80,0.8);color:#fff;border:none;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:0.7rem;}
+
+  /* ---- SHELF TAB ---- */
   .shelf-section{margin-bottom:30px;}
-  .shelf-section h3{font-family:'Quicksand',sans-serif;font-size:1.15rem;font-weight:700;margin:0 0 3px;}
-  .shelf-section .shelf-persona-tag{font-size:0.72rem;color:var(--charcoal-soft);margin-bottom:12px;display:block;}
+  .shelf-section h3{font-family:'Quicksand',sans-serif;font-size:1.15rem;font-weight:700;margin:0 0 3px;color:var(--charcoal);}
+  .shelf-section .shelf-persona-tag{font-family:'Inter',sans-serif;font-size:0.7rem;color:var(--charcoal-soft);margin-bottom:12px;display:block;}
   .book-row{display:flex;gap:14px;flex-wrap:wrap;}
   .book-card{flex:1;min-width:220px;border:1px solid var(--paper-line);background:#FDF9F6;border-radius:18px;padding:16px;}
-  .book-card .btitle{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;margin-bottom:2px;}
-  .book-card .bauthor{font-size:0.75rem;color:var(--charcoal-soft);margin-bottom:8px;}
+  .book-card .btitle{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;margin-bottom:2px;color:var(--charcoal);}
+  .book-card .bauthor{font-family:'Inter',sans-serif;font-size:0.72rem;color:var(--charcoal-soft);margin-bottom:8px;}
   .book-card p{font-size:0.85rem;line-height:1.5;margin:0 0 10px;}
-  .book-card a{font-weight:600;font-size:0.75rem;color:var(--brass-dark);text-decoration:none;border-bottom:1px solid var(--brass-dark);}
+  .book-card a{font-family:'Inter',sans-serif;font-weight:600;font-size:0.75rem;color:var(--brass-dark);text-decoration:none;border-bottom:1px solid var(--brass-dark);}
+  .book-card a:hover{color:var(--ink);border-color:var(--ink);}
 
-  /* Modal */
-  .modal-overlay{position:fixed;inset:0;background:rgba(75,53,80,0.4);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
-  .modal-card{background:#fff;border-radius:24px;padding:32px;max-width:540px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,0.15);}
-  .modal-card h3{font-family:'Quicksand',sans-serif;font-size:1.4rem;margin:0 0 12px;}
-  .modal-card p{font-size:0.88rem;line-height:1.6;color:var(--charcoal);margin-bottom:14px;}
+  footer.disclosure{max-width:960px;margin:18px auto 0;padding:0 20px;font-family:'Inter',sans-serif;font-size:0.72rem;color:var(--charcoal-soft);line-height:1.6;}
+  @media (max-width:640px){.masthead h1{font-size:1.7rem;} .vb-form{grid-template-columns:1fr 1fr;}}
 
-  /* Login Screen */
+  /* ---- LOGIN SCREEN ---- */
   #loginScreen{position:fixed;inset:0;background:var(--parchment);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
   .login-card{background:#fff;border-radius:26px;box-shadow:0 12px 40px rgba(139,90,158,0.16);padding:36px 32px;max-width:380px;width:100%;text-align:center;}
-  .login-card h1{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.8rem;margin:0 0 4px;}
+  .login-card h1{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.8rem;margin:0 0 4px;color:var(--charcoal);}
   .login-card p{font-size:0.85rem;color:var(--charcoal-soft);margin:0 0 24px;}
-  .login-field{width:100%;padding:12px 16px;border:1px solid var(--paper-line);border-radius:999px;font-size:0.9rem;margin-bottom:10px;}
-  .login-btn{width:100%;padding:12px 16px;border:none;border-radius:999px;font-weight:600;font-size:0.9rem;cursor:pointer;margin-bottom:10px;}
+  .login-field{width:100%;padding:12px 16px;border:1px solid var(--paper-line);border-radius:999px;font-family:'Inter',sans-serif;font-size:0.9rem;margin-bottom:10px;color:var(--charcoal);}
+  .login-btn{width:100%;padding:12px 16px;border:none;border-radius:999px;font-family:'Inter',sans-serif;font-weight:600;font-size:0.9rem;cursor:pointer;margin-bottom:10px;}
   .login-btn.primary{background:var(--ink);color:#fff;}
   .login-btn.google{background:#fff;color:var(--charcoal);border:1px solid var(--paper-line);display:flex;align-items:center;justify-content:center;gap:8px;}
+  .login-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--charcoal-soft);font-size:0.75rem;}
+  .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--paper-line);}
+  .login-toggle{font-size:0.82rem;color:var(--charcoal-soft);margin-top:6px;}
+  .login-toggle a{color:var(--ink);font-weight:600;cursor:pointer;text-decoration:none;}
+  .login-error{color:var(--rose-dark);font-size:0.8rem;margin-bottom:10px;min-height:1em;}
   #appRoot{display:none;}
-  .signout-link{font-size:0.78rem;color:var(--charcoal-soft);cursor:pointer;text-decoration:underline;}
+  .signout-link{font-family:'Inter',sans-serif;font-size:0.78rem;color:var(--charcoal-soft);cursor:pointer;text-decoration:underline;}
 </style>
 </head>
 <body>
-
-<!-- LOGIN MODAL -->
 <div id="loginScreen">
   <div class="login-card">
     <h1>Life Coach</h1>
-    <p id="loginSubtitle">Sign in to sync your journal and coaching conversations.</p>
-    <div style="color:var(--rose-dark);font-size:0.8rem;margin-bottom:10px;" id="loginError"></div>
+    <p id="loginSubtitle">Sign in to sync your journal, vision board, and coaching conversations.</p>
+    <div class="login-error" id="loginError"></div>
     <input type="email" class="login-field" id="loginEmail" placeholder="Email">
     <input type="password" class="login-field" id="loginPassword" placeholder="Password">
     <button class="login-btn primary" id="loginSubmit">Sign In</button>
-    <div style="margin:12px 0;color:var(--charcoal-soft);font-size:0.75rem;">or</div>
+    <div class="login-divider">or</div>
     <button class="login-btn google" id="googleSignIn">Sign in with Google</button>
+    <div class="login-toggle" id="loginToggle">Don't have an account? <a id="toggleToSignup">Create one</a></div>
   </div>
 </div>
-
-<!-- ABOUT MODAL -->
-<div class="modal-overlay" id="aboutModal">
-  <div class="modal-card">
-    <h3>About Life Coach</h3>
-    <p>A personalized AI coaching environment featuring three distinct coaching personas: <strong>The Visionary</strong>, <strong>The Corporate Strategist</strong>, and <strong>The Founder</strong>.</p>
-    <p>Each persona draws on distinct leadership, mindset, and entrepreneurial philosophies. Compare their advice simultaneously on any question or career dilemma.</p>
-    <p style="font-size:0.78rem;color:var(--charcoal-soft);background:#F8F3FA;padding:12px;border-radius:12px;">Disclosures: These are fictional AI coaching personas inspired by publicly known leadership concepts. They are not real individuals nor endorsed by any named authors.</p>
-    <div style="text-align:right;margin-top:20px;">
-      <button class="btn" id="closeAbout" style="background:var(--ink);">Close</button>
-    </div>
-  </div>
-</div>
-
 <div id="appRoot">
 <div class="app">
   <div class="masthead">
-    <div>
-      <h1>Life Coach</h1>
-      <div class="tagline">Dual and multi-perspective executive coaching tailored to your goals.</div>
-    </div>
-    <div class="actions">
-      <span class="info-link" id="openAbout">About &amp; Features</span>
+    <h1>Life Coach</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span class="sub" id="todayDate"></span>
       <span class="signout-link" id="signOutBtn">Sign out</span>
     </div>
   </div>
-
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="coaches">CHAT</button>
+    <button class="tab-btn active" data-tab="coaches">COACHES</button>
     <button class="tab-btn" data-tab="journal">JOURNAL</button>
     <button class="tab-btn" data-tab="shelf">SHELF</button>
   </nav>
 
   <main class="page">
-    <!-- CHAT PANEL -->
+
+    <!-- COACHES -->
     <section class="panel active" id="coaches">
-      <div class="header-row">
-        <h2 class="section-title">Talk It Through</h2>
-        <span class="selection-badge" id="selectionBadge">1 OF 3 SELECTED</span>
-      </div>
+      <h2 class="section-title">Talk it through</h2>
+      <p class="section-note">Three original coaching personas, each with a distinct point of view. Check one, two, or all three to compare their advice on the same question.</p>
 
       <div class="persona-row" id="personaRow"></div>
 
-      <div class="chat-window" id="chatWindow"></div>
+      <button class="btn ghost" id="toggleContext" type="button" style="margin-bottom:14px;">+ Add background context</button>
+      <div id="contextBox" style="display:none;margin-bottom:20px;">
+        <p class="section-note" style="margin-bottom:8px;">Paste in anything relevant — an email you're mulling over, a Slack message, notes from a conversation — and your coach will factor it in. This stays saved only in this app; nothing is fetched automatically unless you connect it below.</p>
 
-      <div class="toolbar-panel" id="contextBox">
-        <div style="font-weight:600;font-size:0.85rem;margin-bottom:6px;">Background Context</div>
-        <textarea class="entry" id="contextNotes" placeholder="Paste an email, Slack message, or notes to factor into your session..." style="min-height:70px;margin-bottom:8px;"></textarea>
-        <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
-          <button class="btn ghost" id="connectGmail" type="button" style="font-size:0.75rem;padding:6px 12px;">+ Connect Gmail</button>
-          <div class="save-row" style="margin:0;">
-            <button class="btn ghost" id="clearContext" type="button" style="padding:6px 14px;font-size:0.8rem;">Clear</button>
-            <button class="btn" id="saveContext" type="button" style="background:var(--ink);padding:6px 14px;font-size:0.8rem;">Save Context</button>
+        <button class="btn ghost" id="connectGmail" type="button" style="margin-bottom:10px;">Connect Gmail</button>
+        <div id="gmailStatus" class="disclosure-inline" style="margin-bottom:10px;"></div>
+        <div id="gmailList" style="display:none;margin-bottom:16px;border:1px solid var(--paper-line);border-radius:14px;padding:12px;background:#FDF9F6;">
+          <p class="section-note" style="margin-bottom:8px;">Check any that are relevant — only checked ones get added to your context below. Only subject lines and short snippets are shown, never full email bodies.</p>
+          <div id="gmailItems"></div>
+          <div class="save-row">
+            <button class="btn" id="addSelectedEmails" type="button" style="background:var(--ink)">Add checked to context</button>
           </div>
         </div>
+
+        <textarea class="entry" id="contextNotes" placeholder="Paste relevant context here..." style="min-height:90px;"></textarea>
+        <div class="save-row">
+          <button class="btn ghost" id="clearContext" type="button">Clear</button>
+          <button class="btn" id="saveContext" type="button" style="background:var(--ink)">Save context</button>
+        </div>
+        <div class="disclosure-inline" id="contextStatus"></div>
       </div>
 
-      <div class="chat-input-container">
-        <div class="chat-input-row">
-          <button class="btn ghost" id="toggleContext" type="button" style="padding:10px 16px;white-space:nowrap;">+ Context</button>
-          <button class="mic-btn" id="micChat" type="button" title="Record voice">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg>
-          </button>
-          <input type="text" id="chatInput" placeholder="Type or record your message...">
-          <button class="btn" id="chatSend" style="background:var(--ink)">Send</button>
-        </div>
+      <div class="chat-window" id="chatWindow"></div>
+      <div class="chat-input-row">
+        <button class="mic-btn" id="micChat" type="button" title="Record voice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg>
+        </button>
+        <input type="text" id="chatInput" placeholder="Type or record your message...">
+        <button class="btn" id="chatSend" style="background:var(--ink)">Send</button>
       </div>
+      <div class="disclosure-inline">These are original, fictional coaching personas inspired by publicly known leadership and wellbeing concepts. They are not, and do not claim to be, any real individual.</div>
     </section>
 
-    <!-- JOURNAL PANEL -->
+    <!-- JOURNAL -->
     <section class="panel" id="journal">
       <div class="segmented">
         <button class="seg-btn active" data-sub="reflect">Reflect</button>
@@ -246,53 +233,110 @@
       </div>
 
       <div class="subpanel active" id="sub-reflect">
-        <h2 class="section-title" style="margin-bottom:12px;">Reflect</h2>
+        <h2 class="section-title">Reflect</h2>
+        <p class="section-note">Prompts for career and for everything outside of it. Pick one, or write freely.</p>
         <div class="prompt-grid" id="reflectPrompts"></div>
-        <textarea class="entry" id="reflectEntry" placeholder="Write freely or select a prompt above..."></textarea>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <button class="mic-btn" id="micReflect" type="button" title="Record voice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg>
+          </button>
+          <span style="font-size:0.78rem;color:var(--charcoal-soft);">Tap to dictate instead of typing</span>
+        </div>
+        <textarea class="entry" id="reflectEntry" placeholder="Write here..."></textarea>
         <div class="save-row">
           <button class="btn ghost" id="clearReflect">Clear</button>
-          <button class="btn" id="saveReflect" style="background:var(--rose-dark)">Save Entry</button>
+          <button class="btn" id="saveReflect" style="background:var(--rose-dark)">Save entry</button>
         </div>
         <div class="entries-list" id="reflectEntries"></div>
       </div>
 
       <div class="subpanel" id="sub-vision">
-        <h2 class="section-title" style="margin-bottom:12px;">Vision Board</h2>
-        <div style="display:flex;gap:8px;margin-bottom:16px;">
-          <input type="text" id="vbImg" placeholder="Image URL" style="flex:2;padding:10px;border:1px solid var(--paper-line);border-radius:999px;">
-          <input type="text" id="vbCap" placeholder="Caption" style="flex:1;padding:10px;border:1px solid var(--paper-line);border-radius:999px;">
+        <h2 class="section-title">Vision board</h2>
+        <p class="section-note">Add an image URL, a caption, and a category.</p>
+        <div class="vb-form">
+          <input type="text" id="vbImg" placeholder="Image URL">
+          <input type="text" id="vbCap" placeholder="Caption">
+          <select id="vbCat"><option>Career</option><option>Wellbeing</option><option>Relationships</option><option>Growth</option><option>Other</option></select>
           <button class="btn" id="vbAdd" style="background:var(--rose-dark)">Add</button>
         </div>
-        <div id="vbGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;"></div>
+        <div class="vb-grid" id="vbGrid"></div>
       </div>
     </section>
 
-    <!-- SHELF PANEL -->
+    <!-- SHELF -->
     <section class="panel" id="shelf">
-      <h2 class="section-title" style="margin-bottom:16px;">Recommended Reading</h2>
+      <h2 class="section-title">The shelf</h2>
+      <p class="section-note">Real books and resources from the women whose thinking inspired these coaching personas — curated, not affiliated. Links go to the publisher or retailer, not to us.</p>
+
       <div class="shelf-section">
-        <h3>The Visionary Shelf</h3>
-        <span class="shelf-persona-tag">Mindset, Neuroscience &amp; Brain Plasticity</span>
+        <h3>For The Visionary</h3>
+        <span class="shelf-persona-tag">Inspired by the work of Dr. Tara Swart</span>
         <div class="book-row">
           <div class="book-card">
             <div class="btitle">The Source</div>
             <div class="bauthor">Tara Swart, MD, PhD</div>
-            <p>Rewire your brain for clarity, vision, and goal achievement through practical neuroscience.</p>
-            <a href="https://www.amazon.com/Source-Secrets-Universe-Science-Brain/dp/0062935739" target="_blank">View Title →</a>
+            <p>A guide connecting neuroscience with goal-setting and visualization practices, aimed at helping readers rewire habitual thought patterns.</p>
+            <a href="https://www.amazon.com/Source-Secrets-Universe-Science-Brain/dp/0062935739" target="_blank" rel="noopener">View on Amazon →</a>
+          </div>
+          <div class="book-card">
+            <div class="btitle">Neuroscience for Leadership</div>
+            <div class="bauthor">Tara Swart, Kitty Chisholm &amp; Paul Brown</div>
+            <p>An exploration of how brain science applies to leadership development, decision-making, and organizational behavior.</p>
+            <a href="https://www.google.com/search?q=Neuroscience+for+Leadership+Tara+Swart+book" target="_blank" rel="noopener">Search for this title →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="shelf-section">
+        <h3>For The Corporate Strategist</h3>
+        <span class="shelf-persona-tag">Inspired by the work of Indra Nooyi</span>
+        <div class="book-row">
+          <div class="book-card">
+            <div class="btitle">My Life in Full: Work, Family, and Our Future</div>
+            <div class="bauthor">Indra Nooyi</div>
+            <p>A memoir from the former PepsiCo CEO covering her career strategy, leadership decisions, and the case for better structural support for working families.</p>
+            <a href="https://www.amazon.com/My-Life-Full-Family-Future/dp/059319179X" target="_blank" rel="noopener">View on Amazon →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="shelf-section">
+        <h3>For The Founder</h3>
+        <span class="shelf-persona-tag">Inspired by the work of Emma Grede</span>
+        <div class="book-row">
+          <div class="book-card">
+            <div class="btitle">Start With Yourself: A New Vision for Work &amp; Life</div>
+            <div class="bauthor">Emma Grede</div>
+            <p>A practical guide from the Good American and SKIMS co-founder on discarding outdated assumptions about ambition, money, and work-life balance in favor of a self-directed mindset.</p>
+            <a href="https://www.amazon.com/Start-Yourself-Vision-Work-Life/dp/1668085488" target="_blank" rel="noopener">View on Amazon →</a>
+          </div>
+          <div class="book-card">
+            <div class="btitle">Aspire with Emma Grede</div>
+            <div class="bauthor">Podcast hosted by Emma Grede</div>
+            <p>A weekly podcast featuring conversations with founders, executives, and cultural figures about building brands and careers.</p>
+            <a href="https://www.google.com/search?q=Aspire+with+Emma+Grede+podcast" target="_blank" rel="noopener">Search for this podcast →</a>
           </div>
         </div>
       </div>
     </section>
+
   </main>
 </div>
+
+<footer class="disclosure">
+  The Visionary, The Corporate Strategist, and The Founder are original coaching personas created for this workbook. Their perspectives draw on publicly known concepts associated with the named authors, but they are not those individuals, are not endorsed by them, and nothing they say should be taken as an actual statement from a real person. Shelf links point to third-party retailers and publishers.
+</footer>
 </div>
+<!-- closes #appRoot -->
 
 <script>
 (function(){
   const $ = (sel, el=document) => el.querySelector(sel);
   const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
 
-  // Top level Tabs
+  $('#todayDate').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+
+  // ---------- top-level tabs ----------
   $$('.tab-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       $$('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -302,18 +346,28 @@
     });
   });
 
-  // Modal Controls
-  $('#openAbout').addEventListener('click', () => $('#aboutModal').style.display='flex');
-  $('#closeAbout').addEventListener('click', () => $('#aboutModal').style.display='none');
+  // ---------- journal sub-tabs ----------
+  $$('.seg-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      $$('.seg-btn').forEach(b=>b.classList.remove('active'));
+      $$('.subpanel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      $('#sub-'+btn.dataset.sub).classList.add('active');
+    });
+  });
 
-  // Firebase Init
+  // ---------- storage helpers (Firestore, scoped to the signed-in user) ----------
   const auth = firebase.auth();
   const db = firebase.firestore();
   const functionsRef = firebase.functions();
   let currentUser = null;
 
   function sanitizeKey(key){ return key.replace(/[:.\/\[\]#$]/g, '_'); }
-  function userDocRef(){ return db.collection('users').doc(currentUser.uid); }
+
+  function userDocRef(){
+    if(!currentUser) throw new Error('Not signed in');
+    return db.collection('users').doc(currentUser.uid);
+  }
 
   async function getVal(key, fallback){
     try{
@@ -321,28 +375,67 @@
       const store = (snap.exists && snap.data().store) || {};
       const val = store[sanitizeKey(key)];
       return val === undefined ? fallback : val;
-    }catch(e){ return fallback; }
+    }catch(e){
+      console.error('getVal failed', e);
+      return fallback;
+    }
   }
-
   async function setVal(key, value){
     try{
       await userDocRef().set({ store: { [sanitizeKey(key)]: value } }, { merge: true });
       return true;
-    }catch(e){ return false; }
+    }catch(e){
+      console.error('storage set failed', e);
+      return false;
+    }
   }
 
-  // Auth Handler
+  // ---------- authentication ----------
+  let isSignupMode = false;
+  function showLoginError(msg){ $('#loginError').textContent = msg || ''; }
+
+  function bindToggleLink(){
+    const link = $('#toggleToSignup');
+    if(link) link.addEventListener('click', handleToggleClick);
+  }
+  function handleToggleClick(){
+    isSignupMode = !isSignupMode;
+    $('#loginSubmit').textContent = isSignupMode ? 'Create Account' : 'Sign In';
+    $('#loginSubtitle').textContent = isSignupMode
+      ? 'Create an account to sync your journal, vision board, and coaching conversations.'
+      : 'Sign in to sync your journal, vision board, and coaching conversations.';
+    $('#loginToggle').innerHTML = isSignupMode
+      ? 'Already have an account? <a id="toggleToSignup">Sign in</a>'
+      : "Don't have an account? <a id=\"toggleToSignup\">Create one</a>";
+    bindToggleLink();
+    showLoginError('');
+  }
+  bindToggleLink();
+
   $('#loginSubmit').addEventListener('click', async ()=>{
     const email = $('#loginEmail').value.trim();
     const password = $('#loginPassword').value;
+    if(!email || !password){ showLoginError('Please enter an email and password.'); return; }
+    showLoginError('');
     try{
-      await auth.signInWithEmailAndPassword(email, password);
-    }catch(e){ $('#loginError').textContent = e.message; }
+      if(isSignupMode){
+        await auth.createUserWithEmailAndPassword(email, password);
+      }else{
+        await auth.signInWithEmailAndPassword(email, password);
+      }
+    }catch(e){
+      showLoginError(e.message || 'Something went wrong. Please try again.');
+    }
   });
 
   $('#googleSignIn').addEventListener('click', async ()=>{
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
+    showLoginError('');
+    try{
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    }catch(e){
+      showLoginError(e.message || 'Google sign-in failed. Please try again.');
+    }
   });
 
   $('#signOutBtn').addEventListener('click', ()=>{ auth.signOut(); });
@@ -352,55 +445,55 @@
     if(user){
       $('#loginScreen').style.display = 'none';
       $('#appRoot').style.display = 'block';
-      loadContext();
-      loadChat();
+      initAppForUser();
     }else{
       $('#loginScreen').style.display = 'flex';
       $('#appRoot').style.display = 'none';
     }
   });
 
-  // Personas Spec
+  function initAppForUser(){
+    // These are declared further down but hoisted within this closure, so this is safe to call here.
+    loadContext();
+    loadChat();
+    loadEntries();
+    loadVisionBoard();
+  }
+
+  // ================= COACHES =================
   const PERSONAS = {
     visionary: {
-      name:'The Visionary', tag:'Vision & Mindset', color:'var(--brass-dark)',
-      icon:'<svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="36" fill="#C98A3E"/><circle cx="36" cy="28" r="12" fill="#fff"/><path d="M14 62c0-12 10-20 22-20s22 8 22 20" fill="#fff"/></svg>',
-      system:'You are "The Visionary." Coaching lens: visualization, mindset reframing, and neuroscience-backed goal setting.'
+      name:'The Visionary', tag:'Vision & mindset', color:'var(--brass-dark)',
+      icon:'<svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gVis" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B08FE0"/><stop offset="1" stop-color="#6E48A6"/></linearGradient></defs><circle cx="36" cy="36" r="36" fill="url(#gVis)"/><g stroke="#F3EFFA" stroke-width="1.4" fill="none" opacity="0.6"><circle cx="36" cy="12" r="2.6"/><circle cx="52" cy="19" r="1.8"/><circle cx="59" cy="34" r="1.4"/><circle cx="20" cy="19" r="1.8"/><circle cx="13" cy="34" r="1.4"/></g><circle cx="36" cy="29" r="11" fill="#2B1F3D" opacity="0.88"/><path d="M13 63c0-13 10.3-21.5 23-21.5s23 8.5 23 21.5" fill="#2B1F3D" opacity="0.88"/></svg>',
+      system:'You are "The Visionary," an original, fictional coaching persona in a personal workbook app. Your coaching lens blends neuroscience-informed visualization, goal-setting, and mindset reframing -- themes broadly associated with the field of applied neuroscience for leadership and personal development. You are NOT, and must never claim or imply that you are, any real living person -- not Dr. Tara Swart, nor anyone else. If asked whether you are a real person, state clearly and simply that you are an original coaching persona inspired by publicly known ideas in that field, not the individual herself. Speak warmly, curiously, and with light scientific grounding. Encourage visualization exercises, reframing limiting beliefs, and clear articulation of goals. Keep responses conversational and concise, generally 3-6 sentences unless the user asks for more depth. Never fabricate specific studies, quotes, or biographical claims about any real person.'
     },
     strategist: {
-      name:'The Corporate Strategist', tag:'Career & Leadership', color:'var(--sage-dark)',
-      icon:'<svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="36" fill="#4C5FA8"/><circle cx="36" cy="28" r="12" fill="#fff"/><path d="M14 62c0-12 10-20 22-20s22 8 22 20" fill="#fff"/></svg>',
-      system:'You are "The Corporate Strategist." Coaching lens: pragmatic corporate strategy, leadership, and decisiveness.'
+      name:'The Corporate Strategist', tag:'Career & leadership', color:'var(--sage-dark)',
+      icon:'<svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gStr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#93A6E8"/><stop offset="1" stop-color="#4C5FA8"/></linearGradient></defs><circle cx="36" cy="36" r="36" fill="url(#gStr)"/><circle cx="36" cy="29" r="11" fill="#221D3A" opacity="0.88"/><path d="M13 63c0-13 10.3-21.5 23-21.5s23 8.5 23 21.5" fill="#221D3A" opacity="0.88"/><path d="M27 45l9-5 9 5" stroke="#F3EFFA" stroke-width="2" fill="none" opacity="0.75" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      system:'You are "The Corporate Strategist," an original, fictional coaching persona in a personal workbook app. Your coaching lens is on pragmatic corporate strategy, purpose-driven leadership, decisiveness under pressure, and balancing ambition with genuine care for the people you lead -- themes broadly associated with senior executive leadership. You are NOT, and must never claim or imply that you are, any real living person -- not Indra Nooyi, nor anyone else. If asked whether you are a real person, state clearly and simply that you are an original coaching persona inspired by publicly known leadership ideas, not the individual herself. Speak with warmth but directness, favoring clear frameworks and concrete next steps. Keep responses conversational and concise, generally 3-6 sentences unless the user asks for more depth. Never fabricate specific studies, quotes, or biographical claims about any real person.'
     },
     founder: {
-      name:'The Founder', tag:'Entrepreneurship', color:'var(--rose-dark)',
-      icon:'<svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="36" fill="#D6635F"/><circle cx="36" cy="28" r="12" fill="#fff"/><path d="M14 62c0-12 10-20 22-20s22 8 22 20" fill="#fff"/></svg>',
-      system:'You are "The Founder." Coaching lens: entrepreneurial mindset, ownership, and practical execution.'
+      name:'The Founder', tag:'Entrepreneurship & ownership', color:'var(--rose-dark)',
+      icon:'<svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gFou" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D08FCB"/><stop offset="1" stop-color="#9C4B96"/></linearGradient></defs><circle cx="36" cy="36" r="36" fill="url(#gFou)"/><circle cx="33" cy="29" r="11" fill="#341B34" opacity="0.88"/><path d="M10 63c0-13 10.3-21.5 23-21.5 4 0 7.7.9 11 2.5" fill="#341B34" opacity="0.88"/><g fill="#F3EFFA" opacity="0.75"><rect x="50" y="50" width="4.5" height="9" rx="1"/><rect x="57" y="43" width="4.5" height="16" rx="1"/><rect x="64" y="35" width="4.5" height="24" rx="1"/></g></svg>',
+      system:'You are "The Founder," an original, fictional coaching persona in a personal workbook app. Your coaching lens is on entrepreneurial mindset, brand-building, ownership of your own narrative, and replacing outdated assumptions about ambition, money, and work-life balance with a more self-directed way of thinking -- themes broadly associated with the modern self-made entrepreneur movement. You are NOT, and must never claim or imply that you are, any real living person -- not Emma Grede, nor anyone else. If asked whether you are a real person, state clearly and simply that you are an original coaching persona inspired by publicly known entrepreneurship ideas, not the individual herself. Speak with directness, confidence, and practical energy -- favoring concrete action and reframing limiting beliefs over abstract theory. Keep responses conversational and concise, generally 3-6 sentences unless the user asks for more depth. Never fabricate specific studies, quotes, or biographical claims about any real person.'
     }
   };
-
   let selectedPersonas = new Set(['visionary']);
 
   function renderPersonaRow(){
     const row = $('#personaRow');
     row.innerHTML='';
-    $('#selectionBadge').textContent = `${selectedPersonas.size} OF ${Object.keys(PERSONAS).length} SELECTED`;
-
     Object.keys(PERSONAS).forEach(key=>{
       const p = PERSONAS[key];
       const isSelected = selectedPersonas.has(key);
       const card = document.createElement('div');
       card.className = 'persona-card'+(isSelected?' active':'');
-      card.style.setProperty('--card-accent', p.color);
-      card.innerHTML = `
-        <div class="active-indicator"></div>
-        <div class="avatar">${p.icon}</div>
-        <div class="pname">${p.name}</div>
-        <div class="ptag">${p.tag}</div>`;
-      
+      card.innerHTML = `<div class="persona-check">${isSelected?'✓':''}</div>
+        <div class="avatar" style="background:${p.color};color:#fff;">${p.icon}</div>
+        <div class="pname">${p.name}</div><div class="ptag">${p.tag}</div>`;
       card.addEventListener('click', ()=>{
         if(isSelected){
-          if(selectedPersonas.size === 1) return;
+          if(selectedPersonas.size===1) return; // keep at least one selected
           selectedPersonas.delete(key);
         }else{
           selectedPersonas.add(key);
@@ -413,135 +506,336 @@
   }
   renderPersonaRow();
 
-  // Chat Loader & Markdown Renderer
   async function loadChat(){
     const win = $('#chatWindow');
     win.innerHTML = '';
     const personas = Array.from(selectedPersonas);
-    
-    // Fetch combined history
     let merged = [];
     for(const key of personas){
       const history = await getVal('chat:'+key, []);
-      history.forEach(m => merged.push(Object.assign({}, m, {persona: key})));
+      history.forEach(m=>merged.push(Object.assign({}, m, {persona:key})));
     }
-
-    if(merged.length === 0){
-      win.innerHTML = `<p class="empty-note">Ask a question to begin receiving perspectives.</p>`;
+    if(merged.length===0){
+      const names = personas.map(k=>PERSONAS[k].name).join(', ');
+      win.innerHTML = `<p class="empty-note">Say hello to ${names} to start.</p>`;
       return;
     }
-
-    // Group user and assistant messages cleanly
-    merged.sort((a,b) => (a.ts || 0) - (b.ts || 0));
-
-    let currentGroup = null;
-    merged.forEach(m => {
-      if(m.role === 'user'){
-        renderUserMsg(m.text);
-      } else if (m.role === 'assistant'){
-        renderAssistantMsgGroup(m.persona, m.text);
+    // de-duplicate user messages shared across personas (same groupId), keep first occurrence
+    const seenGroups = new Set();
+    merged = merged.filter(m=>{
+      if(m.role==='user' && m.groupId){
+        if(seenGroups.has(m.groupId)) return false;
+        seenGroups.add(m.groupId);
       }
+      return true;
     });
+    merged.sort((a,b)=>(a.ts||0)-(b.ts||0));
+    merged.forEach(m=>renderMsg(m.role, m.text, m.persona, false, personas.length>1));
     win.scrollTop = win.scrollHeight;
   }
 
-  function renderUserMsg(text){
+  function renderMsg(role, text, personaKey, scroll=true, showLabel=false){
     const win = $('#chatWindow');
+    if(win.querySelector('.empty-note')) win.innerHTML='';
     const div = document.createElement('div');
-    div.className = 'msg user';
-    div.innerHTML = `<span class="who">You</span><div class="bubble">${escapeHtml(text)}</div>`;
+    div.className = 'msg '+role;
+    const who = role==='user' ? 'You' : (showLabel ? PERSONAS[personaKey].name : '');
+    const borderStyle = (role==='assistant' && showLabel) ? `style="border-left:3px solid ${PERSONAS[personaKey].color}"` : '';
+    div.innerHTML = `<div class="who">${who}</div><div class="bubble" ${borderStyle}></div>`;
+    div.querySelector('.bubble').textContent = text;
     win.appendChild(div);
+    if(scroll) win.scrollTop = win.scrollHeight;
   }
 
-  // Multi-Persona Tabbed Assistant Response
-  function renderAssistantMsgGroup(personaKey, text){
-    const win = $('#chatWindow');
-    const p = PERSONAS[personaKey];
-    
-    // Render as Markdown parsed HTML
-    const formattedHtml = marked.parse(text);
+  // ================= CONTEXT NOTES =================
+  $('#toggleContext').addEventListener('click', ()=>{
+    const box = $('#contextBox');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  });
+  async function loadContext(){
+    const notes = await getVal('context:notes', '');
+    $('#contextNotes').value = notes;
+  }
+  $('#saveContext').addEventListener('click', async ()=>{
+    const notes = $('#contextNotes').value;
+    const ok = await setVal('context:notes', notes);
+    $('#contextStatus').textContent = ok ? 'Saved. Your coaches will take this into account.' : 'Could not save.';
+  });
+  $('#clearContext').addEventListener('click', async ()=>{
+    $('#contextNotes').value = '';
+    await setVal('context:notes', '');
+    $('#contextStatus').textContent = 'Cleared.';
+  });
 
-    let group = win.querySelector('.response-group:last-child');
-    if(!group || group.dataset.complete === "true"){
-      group = document.createElement('div');
-      group.className = 'response-group';
-      group.innerHTML = `<div class="response-tabs"></div><div class="response-panes"></div>`;
-      win.appendChild(group);
+  // ---------- Gmail import ----------
+  $('#connectGmail').addEventListener('click', async ()=>{
+    $('#gmailStatus').textContent = 'Connecting to Gmail...';
+    try{
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+      const result = await auth.signInWithPopup(provider);
+      const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
+      const connectedEmail = result.user.email;
+      $('#gmailStatus').innerHTML = `✓ Connected as <strong>${connectedEmail}</strong> — pulling your 10 most recent emails (subject lines + short snippets only)...`;
+      await fetchRecentEmails(credential.accessToken, connectedEmail);
+    }catch(e){
+      $('#gmailStatus').textContent = 'Could not connect Gmail: ' + (e.message || 'unknown error');
     }
+  });
 
-    const tabs = group.querySelector('.response-tabs');
-    const panes = group.querySelector('.response-panes');
-
-    const isFirst = tabs.children.length === 0;
-
-    const tab = document.createElement('button');
-    tab.className = 'response-tab' + (isFirst ? ' active' : '');
-    tab.textContent = p.name;
-    
-    const pane = document.createElement('div');
-    pane.className = 'response-pane' + (isFirst ? ' active' : '');
-    pane.innerHTML = formattedHtml;
-
-    tab.addEventListener('click', ()=>{
-      $$('.response-tab', group).forEach(t=>t.classList.remove('active'));
-      $$('.response-pane', group).forEach(p=>p.classList.remove('active'));
-      tab.classList.add('active');
-      pane.classList.add('active');
-    });
-
-    tabs.appendChild(tab);
-    panes.appendChild(pane);
+  async function fetchRecentEmails(accessToken, connectedEmail){
+    try{
+      const listResp = await fetch('https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=10', {
+        headers: { Authorization: 'Bearer ' + accessToken }
+      });
+      const listData = await listResp.json();
+      if(!listData.messages || listData.messages.length===0){
+        $('#gmailStatus').innerHTML = `✓ Connected as <strong>${connectedEmail}</strong> — no recent emails found.`;
+        return;
+      }
+      const details = await Promise.all(listData.messages.map(async m=>{
+        const r = await fetch(
+          `https://www.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=Subject`,
+          { headers: { Authorization: 'Bearer ' + accessToken } }
+        );
+        return r.json();
+      }));
+      renderGmailChecklist(details);
+      $('#gmailStatus').innerHTML = `✓ Connected as <strong>${connectedEmail}</strong> — showing your ${details.length} most recent emails below. Check any you'd like to add.`;
+    }catch(e){
+      $('#gmailStatus').textContent = 'Could not load emails: ' + (e.message || 'unknown error');
+    }
   }
 
-  // Send Message Logic
-  $('#chatSend').addEventListener('click', async ()=>{
+  function renderGmailChecklist(details){
+    const container = $('#gmailItems');
+    container.innerHTML = '';
+    details.forEach(d=>{
+      const headers = (d.payload && d.payload.headers) || [];
+      const subjectHeader = headers.find(h=>h.name==='Subject');
+      const subject = subjectHeader ? subjectHeader.value : '(no subject)';
+      const snippet = d.snippet || '';
+      const row = document.createElement('label');
+      row.style.cssText = 'display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--paper-line);font-size:0.85rem;cursor:pointer;';
+      row.innerHTML = `<input type="checkbox" data-subject="${encodeURIComponent(subject)}" data-snippet="${encodeURIComponent(snippet)}" style="margin-top:3px;">
+        <span><strong>${subject}</strong><br><span style="color:var(--charcoal-soft)">${snippet}</span></span>`;
+      container.appendChild(row);
+    });
+    $('#gmailList').style.display = 'block';
+  }
+
+  $('#addSelectedEmails').addEventListener('click', ()=>{
+    const checked = $$('#gmailItems input[type="checkbox"]:checked');
+    if(checked.length===0) return;
+    const lines = checked.map(c=>{
+      const subject = decodeURIComponent(c.dataset.subject);
+      const snippet = decodeURIComponent(c.dataset.snippet);
+      return `Email subject: ${subject}\nSnippet: ${snippet}`;
+    });
+    const existing = $('#contextNotes').value;
+    $('#contextNotes').value = (existing ? existing + '\n\n' : '') + lines.join('\n\n');
+    checked.forEach(c=>{ c.checked = false; });
+  });
+  // loadContext() is now called from initAppForUser() once signed in
+
+  async function buildSystemPrompt(personaKey){
+    const base = PERSONAS[personaKey].system;
+    const notes = await getVal('context:notes', '');
+    if(notes && notes.trim()){
+      return base + '\n\nThe user has pasted in some background context about their current situation (from their own emails, messages, or notes) to help you give more grounded advice. Treat it as their own words, not something to fabricate further:\n"""\n' + notes.trim() + '\n"""';
+    }
+    return base;
+  }
+
+  async function callClaude(systemPrompt, messages){
+    // Calls a Firebase Cloud Function ("chatWithCoach"), which holds the real
+    // Anthropic API key server-side and proxies the request. See functions/index.js.
+    const chatWithCoach = functionsRef.httpsCallable('chatWithCoach');
+    const result = await chatWithCoach({
+      systemPrompt: systemPrompt,
+      messages: messages.map(m => ({ role: m.role, content: m.text }))
+    });
+    if(result.data && result.data.reply){
+      return result.data.reply;
+    }
+    throw new Error('No content in response');
+  }
+
+  async function sendChat(){
     const input = $('#chatInput');
     const text = input.value.trim();
     if(!text) return;
-    input.value = '';
+    input.value='';
+    const sendBtn = $('#chatSend');
+    sendBtn.disabled = true;
 
-    renderUserMsg(text);
     const personas = Array.from(selectedPersonas);
+    const showLabel = personas.length>1;
+    const groupId = Date.now()+'-'+Math.random().toString(36).slice(2,8);
+    const userTs = Date.now();
 
-    // Save and call for each selected persona
+    renderMsg('user', text, null, true, showLabel);
+
+    // save the user message into each selected persona's own thread
+    const histories = {};
     for(const key of personas){
-      const systemPrompt = PERSONAS[key].system;
       const history = await getVal('chat:'+key, []);
-      history.push({role:'user', text, ts:Date.now()});
-      
-      try {
-        const chatWithCoach = functionsRef.httpsCallable('chatWithCoach');
-        const res = await chatWithCoach({
-          systemPrompt,
-          messages: history.map(m=>({role:m.role, content:m.text}))
-        });
-
-        const reply = res.data.reply;
-        renderAssistantMsgGroup(key, reply);
-        
-        history.push({role:'assistant', text:reply, ts:Date.now()});
-        await setVal('chat:'+key, history);
-      } catch(e) {
-        renderAssistantMsgGroup(key, "Unable to load perspective.");
-      }
+      history.push({role:'user', text, ts:userTs, groupId});
+      histories[key] = history;
+      await setVal('chat:'+key, history);
     }
-  });
 
-  // Background Context Controls
-  $('#toggleContext').addEventListener('click', ()=>{
-    const box = $('#contextBox');
-    box.style.display = box.style.display === 'block' ? 'none' : 'block';
-  });
+    const placeholderLabel = personas.length>1 ? 'Gathering perspectives' : PERSONAS[personas[0]].name;
+    renderMsg('assistant', '...'+placeholderLabel.toLowerCase()+'...', null, true, false);
 
-  async function loadContext(){
-    $('#contextNotes').value = await getVal('context:notes', '');
+    try{
+      const results = await Promise.all(personas.map(async key=>{
+        const systemPrompt = await buildSystemPrompt(key);
+        const reply = await callClaude(systemPrompt, histories[key]);
+        return {key, reply};
+      }));
+      $('#chatWindow').lastChild.remove();
+      for(const {key, reply} of results){
+        renderMsg('assistant', reply, key, true, showLabel);
+        histories[key].push({role:'assistant', text:reply, ts:Date.now(), persona:key});
+        await setVal('chat:'+key, histories[key]);
+      }
+    }catch(e){
+      $('#chatWindow').lastChild.remove();
+      renderMsg('assistant', "Sorry, I couldn't get a response just now. Please try again.", null, true, false);
+    }
+    sendBtn.disabled = false;
   }
-  $('#saveContext').addEventListener('click', async ()=>{
-    await setVal('context:notes', $('#contextNotes').value);
-    $('#contextBox').style.display = 'none';
-  });
+  $('#chatSend').addEventListener('click', sendChat);
+  $('#chatInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
+
+  // loadChat() is now called from initAppForUser() once signed in
+
+  // ================= JOURNAL: REFLECT =================
+  const reflectPrompts = [
+    {tag:'Visualize', text:"Picture the outcome you're working toward in vivid detail — what does the room, the reaction, the feeling look like when it's done?"},
+    {tag:'Strategy', text:"What's one decision in front of you right now where you're weighing ambition against caution? What does each path cost?"},
+    {tag:'Empathy audit', text:"Think of someone you lead or work alongside. What are they carrying today that has nothing to do with the task in front of them?"},
+    {tag:'Boundaries', text:"Where did you say yes today when part of you wanted to say no?"},
+    {tag:'Renewal', text:"Where did your energy actually go this week? Was it spent on what matters most, or on what was loudest?"},
+    {tag:'Gratitude', text:"Name one small thing today that made things easier or lighter."},
+    {tag:'Voice', text:"What's a perspective you held back from sharing recently? What made you pause?"},
+    {tag:'Free write', text:"Write about whatever is on your mind, career or otherwise."}
+  ];
+  function renderPrompts(){
+    const container = $('#reflectPrompts');
+    container.innerHTML='';
+    reflectPrompts.forEach(p=>{
+      const card = document.createElement('div');
+      card.className='prompt-card';
+      card.innerHTML = `<span class="eyebrow">${p.tag}</span><p>${p.text}</p>`;
+      card.addEventListener('click', ()=>{
+        $$('#reflectPrompts .prompt-card').forEach(c=>c.classList.remove('selected'));
+        card.classList.add('selected');
+        const ta = $('#reflectEntry');
+        if(!ta.value.trim()){ ta.value = p.text + '\n\n'; }
+        ta.focus();
+      });
+      container.appendChild(card);
+    });
+  }
+  renderPrompts();
 
   function escapeHtml(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
+
+  async function loadEntries(){
+    const entries = await getVal('journal:reflect', []);
+    const container = $('#reflectEntries');
+    container.innerHTML='';
+    if(entries.length===0){ container.innerHTML='<p class="empty-note">No entries yet.</p>'; return; }
+    entries.slice().reverse().forEach(e=>{
+      const div = document.createElement('div');
+      div.className='entry-item';
+      div.innerHTML = `<div class="meta">${new Date(e.date).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div><p>${escapeHtml(e.text)}</p>`;
+      container.appendChild(div);
+    });
+  }
+  $('#saveReflect').addEventListener('click', async ()=>{
+    const ta = $('#reflectEntry');
+    const text = ta.value.trim();
+    if(!text) return;
+    const entries = await getVal('journal:reflect', []);
+    entries.push({date:new Date().toISOString(), text});
+    await setVal('journal:reflect', entries);
+    ta.value='';
+    loadEntries();
+  });
+  $('#clearReflect').addEventListener('click', ()=>{ $('#reflectEntry').value=''; });
+  // loadEntries() is now called from initAppForUser() once signed in
+
+  // ================= JOURNAL: VISION BOARD =================
+  async function loadVisionBoard(){
+    const items = await getVal('visionboard', []);
+    const grid = $('#vbGrid');
+    grid.innerHTML='';
+    if(items.length===0){ grid.innerHTML='<p class="empty-note">Your board is empty — add your first image above.</p>'; return; }
+    items.forEach((item, idx)=>{
+      const card = document.createElement('div');
+      card.className='vb-card';
+      card.innerHTML = `<button class="del" data-idx="${idx}">×</button>
+        <img src="${item.img}" alt="${escapeHtml(item.cap)}" onerror="this.style.display='none'">
+        <div class="cap">${escapeHtml(item.cap)}</div><div class="cat">${item.cat}</div>`;
+      grid.appendChild(card);
+    });
+    $$('.vb-card .del').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const items = await getVal('visionboard', []);
+        items.splice(parseInt(btn.dataset.idx),1);
+        await setVal('visionboard', items);
+        loadVisionBoard();
+      });
+    });
+  }
+  $('#vbAdd').addEventListener('click', async ()=>{
+    const img = $('#vbImg').value.trim();
+    const cap = $('#vbCap').value.trim();
+    const cat = $('#vbCat').value;
+    if(!img) return;
+    const items = await getVal('visionboard', []);
+    items.push({img, cap, cat});
+    await setVal('visionboard', items);
+    $('#vbImg').value=''; $('#vbCap').value='';
+    loadVisionBoard();
+  });
+  // loadVisionBoard() is now called from initAppForUser() once signed in
+
+  // ================= VOICE TO TEXT =================
+  function setupVoiceInput(targetEl, buttonEl, isTextarea){
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SpeechRecognition){
+      buttonEl.disabled = true;
+      buttonEl.title = 'Voice input is not supported in this browser';
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    let listening = false;
+
+    buttonEl.addEventListener('click', ()=>{
+      if(listening){ recognition.stop(); return; }
+      try{ recognition.start(); }catch(e){ /* already started */ }
+    });
+    recognition.onstart = ()=>{ listening = true; buttonEl.classList.add('listening'); };
+    recognition.onend = ()=>{ listening = false; buttonEl.classList.remove('listening'); };
+    recognition.onerror = ()=>{ listening = false; buttonEl.classList.remove('listening'); };
+    recognition.onresult = (event)=>{
+      const transcript = Array.from(event.results).map(r=>r[0].transcript).join(' ').trim();
+      if(!transcript) return;
+      const sep = targetEl.value && !targetEl.value.endsWith(' ') && !targetEl.value.endsWith('\n') ? ' ' : '';
+      targetEl.value = targetEl.value + sep + transcript;
+      targetEl.focus();
+    };
+  }
+  setupVoiceInput($('#chatInput'), $('#micChat'), false);
+  setupVoiceInput($('#reflectEntry'), $('#micReflect'), true);
+
 })();
 </script>
 </body>
