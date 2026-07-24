@@ -194,7 +194,18 @@
 
       <button class="btn ghost" id="toggleContext" type="button" style="margin-bottom:14px;">+ Add background context</button>
       <div id="contextBox" style="display:none;margin-bottom:20px;">
-        <p class="section-note" style="margin-bottom:8px;">Paste in anything relevant — an email you're mulling over, a Slack message, notes from a conversation — and your coach will factor it in. This stays saved only in this app; nothing is fetched automatically from Gmail, Slack, or anywhere else.</p>
+        <p class="section-note" style="margin-bottom:8px;">Paste in anything relevant — an email you're mulling over, a Slack message, notes from a conversation — and your coach will factor it in. This stays saved only in this app; nothing is fetched automatically unless you connect it below.</p>
+
+        <button class="btn ghost" id="connectGmail" type="button" style="margin-bottom:10px;">Connect Gmail</button>
+        <div id="gmailStatus" class="disclosure-inline" style="margin-bottom:10px;"></div>
+        <div id="gmailList" style="display:none;margin-bottom:16px;border:1px solid var(--paper-line);border-radius:14px;padding:12px;background:#FDF9F6;">
+          <p class="section-note" style="margin-bottom:8px;">Check any that are relevant — only checked ones get added to your context below. Only subject lines and short snippets are shown, never full email bodies.</p>
+          <div id="gmailItems"></div>
+          <div class="save-row">
+            <button class="btn" id="addSelectedEmails" type="button" style="background:var(--ink)">Add checked to context</button>
+          </div>
+        </div>
+
         <textarea class="entry" id="contextNotes" placeholder="Paste relevant context here..." style="min-height:90px;"></textarea>
         <div class="save-row">
           <button class="btn ghost" id="clearContext" type="button">Clear</button>
@@ -554,6 +565,76 @@
     $('#contextNotes').value = '';
     await setVal('context:notes', '');
     $('#contextStatus').textContent = 'Cleared.';
+  });
+
+  // ---------- Gmail import ----------
+  $('#connectGmail').addEventListener('click', async ()=>{
+    $('#gmailStatus').textContent = 'Connecting to Gmail...';
+    try{
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+      const result = await auth.signInWithPopup(provider);
+      const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
+      const connectedEmail = result.user.email;
+      $('#gmailStatus').innerHTML = `✓ Connected as <strong>${connectedEmail}</strong> — pulling your 10 most recent emails (subject lines + short snippets only)...`;
+      await fetchRecentEmails(credential.accessToken, connectedEmail);
+    }catch(e){
+      $('#gmailStatus').textContent = 'Could not connect Gmail: ' + (e.message || 'unknown error');
+    }
+  });
+
+  async function fetchRecentEmails(accessToken, connectedEmail){
+    try{
+      const listResp = await fetch('https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=10', {
+        headers: { Authorization: 'Bearer ' + accessToken }
+      });
+      const listData = await listResp.json();
+      if(!listData.messages || listData.messages.length===0){
+        $('#gmailStatus').innerHTML = `✓ Connected as <strong>${connectedEmail}</strong> — no recent emails found.`;
+        return;
+      }
+      const details = await Promise.all(listData.messages.map(async m=>{
+        const r = await fetch(
+          `https://www.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=Subject`,
+          { headers: { Authorization: 'Bearer ' + accessToken } }
+        );
+        return r.json();
+      }));
+      renderGmailChecklist(details);
+      $('#gmailStatus').innerHTML = `✓ Connected as <strong>${connectedEmail}</strong> — showing your ${details.length} most recent emails below. Check any you'd like to add.`;
+    }catch(e){
+      $('#gmailStatus').textContent = 'Could not load emails: ' + (e.message || 'unknown error');
+    }
+  }
+
+  function renderGmailChecklist(details){
+    const container = $('#gmailItems');
+    container.innerHTML = '';
+    details.forEach(d=>{
+      const headers = (d.payload && d.payload.headers) || [];
+      const subjectHeader = headers.find(h=>h.name==='Subject');
+      const subject = subjectHeader ? subjectHeader.value : '(no subject)';
+      const snippet = d.snippet || '';
+      const row = document.createElement('label');
+      row.style.cssText = 'display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--paper-line);font-size:0.85rem;cursor:pointer;';
+      row.innerHTML = `<input type="checkbox" data-subject="${encodeURIComponent(subject)}" data-snippet="${encodeURIComponent(snippet)}" style="margin-top:3px;">
+        <span><strong>${subject}</strong><br><span style="color:var(--charcoal-soft)">${snippet}</span></span>`;
+      container.appendChild(row);
+    });
+    $('#gmailList').style.display = 'block';
+  }
+
+  $('#addSelectedEmails').addEventListener('click', ()=>{
+    const checked = $$('#gmailItems input[type="checkbox"]:checked');
+    if(checked.length===0) return;
+    const lines = checked.map(c=>{
+      const subject = decodeURIComponent(c.dataset.subject);
+      const snippet = decodeURIComponent(c.dataset.snippet);
+      return `Email subject: ${subject}\nSnippet: ${snippet}`;
+    });
+    const existing = $('#contextNotes').value;
+    $('#contextNotes').value = (existing ? existing + '\n\n' : '') + lines.join('\n\n');
+    checked.forEach(c=>{ c.checked = false; });
   });
   // loadContext() is now called from initAppForUser() once signed in
 
