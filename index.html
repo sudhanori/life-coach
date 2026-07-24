@@ -6,6 +6,24 @@
 <title>Life Coach</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<script>
+  // ===== FIREBASE CONFIG =====
+  // Replace these placeholder values with your own project's config,
+  // found in Firebase Console -> Project settings -> General -> Your apps -> SDK setup.
+  const firebaseConfig = {
+    apiKey: "AIzaSyB5cgqhV8w2NvF_vEzN-Ws8tplSi_s4QxI",
+    authDomain: "life-coach-f9cdf.firebaseapp.com",
+    projectId: "life-coach-f9cdf",
+    storageBucket: "life-coach-f9cdf.firebasestorage.app",
+    messagingSenderId: "467347823923",
+    appId: "1:467347823923:web:70ddaef689e55117fdf246"
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
 <style>
   :root{
     --ink:#8F6BAE; --ink-soft:#F3E9F8;
@@ -117,13 +135,47 @@
 
   footer.disclosure{max-width:960px;margin:18px auto 0;padding:0 20px;font-family:'Inter',sans-serif;font-size:0.72rem;color:var(--charcoal-soft);line-height:1.6;}
   @media (max-width:640px){.masthead h1{font-size:1.7rem;} .vb-form{grid-template-columns:1fr 1fr;}}
+
+  /* ---- LOGIN SCREEN ---- */
+  #loginScreen{position:fixed;inset:0;background:var(--parchment);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+  .login-card{background:#fff;border-radius:26px;box-shadow:0 12px 40px rgba(139,90,158,0.16);padding:36px 32px;max-width:380px;width:100%;text-align:center;}
+  .login-card h1{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.8rem;margin:0 0 4px;color:var(--charcoal);}
+  .login-card p{font-size:0.85rem;color:var(--charcoal-soft);margin:0 0 24px;}
+  .login-field{width:100%;padding:12px 16px;border:1px solid var(--paper-line);border-radius:999px;font-family:'Inter',sans-serif;font-size:0.9rem;margin-bottom:10px;color:var(--charcoal);}
+  .login-btn{width:100%;padding:12px 16px;border:none;border-radius:999px;font-family:'Inter',sans-serif;font-weight:600;font-size:0.9rem;cursor:pointer;margin-bottom:10px;}
+  .login-btn.primary{background:var(--ink);color:#fff;}
+  .login-btn.google{background:#fff;color:var(--charcoal);border:1px solid var(--paper-line);display:flex;align-items:center;justify-content:center;gap:8px;}
+  .login-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--charcoal-soft);font-size:0.75rem;}
+  .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--paper-line);}
+  .login-toggle{font-size:0.82rem;color:var(--charcoal-soft);margin-top:6px;}
+  .login-toggle a{color:var(--ink);font-weight:600;cursor:pointer;text-decoration:none;}
+  .login-error{color:var(--rose-dark);font-size:0.8rem;margin-bottom:10px;min-height:1em;}
+  #appRoot{display:none;}
+  .signout-link{font-family:'Inter',sans-serif;font-size:0.78rem;color:var(--charcoal-soft);cursor:pointer;text-decoration:underline;}
 </style>
 </head>
 <body>
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>Life Coach</h1>
+    <p id="loginSubtitle">Sign in to sync your journal, vision board, and coaching conversations.</p>
+    <div class="login-error" id="loginError"></div>
+    <input type="email" class="login-field" id="loginEmail" placeholder="Email">
+    <input type="password" class="login-field" id="loginPassword" placeholder="Password">
+    <button class="login-btn primary" id="loginSubmit">Sign In</button>
+    <div class="login-divider">or</div>
+    <button class="login-btn google" id="googleSignIn">Sign in with Google</button>
+    <div class="login-toggle" id="loginToggle">Don't have an account? <a id="toggleToSignup">Create one</a></div>
+  </div>
+</div>
+<div id="appRoot">
 <div class="app">
   <div class="masthead">
     <h1>Life Coach</h1>
-    <span class="sub" id="todayDate"></span>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span class="sub" id="todayDate"></span>
+      <span class="signout-link" id="signOutBtn">Sign out</span>
+    </div>
   </div>
   <nav class="tabs">
     <button class="tab-btn active" data-tab="coaches">COACHES</button>
@@ -263,6 +315,8 @@
 <footer class="disclosure">
   The Visionary, The Corporate Strategist, and The Founder are original coaching personas created for this workbook. Their perspectives draw on publicly known concepts associated with the named authors, but they are not those individuals, are not endorsed by them, and nothing they say should be taken as an actual statement from a real person. Shelf links point to third-party retailers and publishers.
 </footer>
+</div>
+<!-- closes #appRoot -->
 
 <script>
 (function(){
@@ -291,14 +345,108 @@
     });
   });
 
-  // ---------- storage helpers ----------
+  // ---------- storage helpers (Firestore, scoped to the signed-in user) ----------
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const functionsRef = firebase.functions();
+  let currentUser = null;
+
+  function sanitizeKey(key){ return key.replace(/[:.\/\[\]#$]/g, '_'); }
+
+  function userDocRef(){
+    if(!currentUser) throw new Error('Not signed in');
+    return db.collection('users').doc(currentUser.uid);
+  }
+
   async function getVal(key, fallback){
-    try{ const raw = localStorage.getItem('lifecoach:'+key); if(raw===null) return fallback; return JSON.parse(raw); }
-    catch(e){ return fallback; }
+    try{
+      const snap = await userDocRef().get();
+      const store = (snap.exists && snap.data().store) || {};
+      const val = store[sanitizeKey(key)];
+      return val === undefined ? fallback : val;
+    }catch(e){
+      console.error('getVal failed', e);
+      return fallback;
+    }
   }
   async function setVal(key, value){
-    try{ localStorage.setItem('lifecoach:'+key, JSON.stringify(value)); return true; }
-    catch(e){ console.error('storage set failed', e); return false; }
+    try{
+      await userDocRef().set({ store: { [sanitizeKey(key)]: value } }, { merge: true });
+      return true;
+    }catch(e){
+      console.error('storage set failed', e);
+      return false;
+    }
+  }
+
+  // ---------- authentication ----------
+  let isSignupMode = false;
+  function showLoginError(msg){ $('#loginError').textContent = msg || ''; }
+
+  function bindToggleLink(){
+    const link = $('#toggleToSignup');
+    if(link) link.addEventListener('click', handleToggleClick);
+  }
+  function handleToggleClick(){
+    isSignupMode = !isSignupMode;
+    $('#loginSubmit').textContent = isSignupMode ? 'Create Account' : 'Sign In';
+    $('#loginSubtitle').textContent = isSignupMode
+      ? 'Create an account to sync your journal, vision board, and coaching conversations.'
+      : 'Sign in to sync your journal, vision board, and coaching conversations.';
+    $('#loginToggle').innerHTML = isSignupMode
+      ? 'Already have an account? <a id="toggleToSignup">Sign in</a>'
+      : "Don't have an account? <a id=\"toggleToSignup\">Create one</a>";
+    bindToggleLink();
+    showLoginError('');
+  }
+  bindToggleLink();
+
+  $('#loginSubmit').addEventListener('click', async ()=>{
+    const email = $('#loginEmail').value.trim();
+    const password = $('#loginPassword').value;
+    if(!email || !password){ showLoginError('Please enter an email and password.'); return; }
+    showLoginError('');
+    try{
+      if(isSignupMode){
+        await auth.createUserWithEmailAndPassword(email, password);
+      }else{
+        await auth.signInWithEmailAndPassword(email, password);
+      }
+    }catch(e){
+      showLoginError(e.message || 'Something went wrong. Please try again.');
+    }
+  });
+
+  $('#googleSignIn').addEventListener('click', async ()=>{
+    showLoginError('');
+    try{
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    }catch(e){
+      showLoginError(e.message || 'Google sign-in failed. Please try again.');
+    }
+  });
+
+  $('#signOutBtn').addEventListener('click', ()=>{ auth.signOut(); });
+
+  auth.onAuthStateChanged(user=>{
+    currentUser = user;
+    if(user){
+      $('#loginScreen').style.display = 'none';
+      $('#appRoot').style.display = 'block';
+      initAppForUser();
+    }else{
+      $('#loginScreen').style.display = 'flex';
+      $('#appRoot').style.display = 'none';
+    }
+  });
+
+  function initAppForUser(){
+    // These are declared further down but hoisted within this closure, so this is safe to call here.
+    loadContext();
+    loadChat();
+    loadEntries();
+    loadVisionBoard();
   }
 
   // ================= COACHES =================
@@ -407,7 +555,7 @@
     await setVal('context:notes', '');
     $('#contextStatus').textContent = 'Cleared.';
   });
-  loadContext();
+  // loadContext() is now called from initAppForUser() once signed in
 
   async function buildSystemPrompt(personaKey){
     const base = PERSONAS[personaKey].system;
@@ -419,19 +567,15 @@
   }
 
   async function callClaude(systemPrompt, messages){
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: messages.map(m => ({ role: m.role, content: m.text }))
-      })
+    // Calls a Firebase Cloud Function ("chatWithCoach"), which holds the real
+    // Anthropic API key server-side and proxies the request. See functions/index.js.
+    const chatWithCoach = functionsRef.httpsCallable('chatWithCoach');
+    const result = await chatWithCoach({
+      systemPrompt: systemPrompt,
+      messages: messages.map(m => ({ role: m.role, content: m.text }))
     });
-    const data = await response.json();
-    if(data.content){
-      return data.content.map(c => c.text || '').join('\n');
+    if(result.data && result.data.reply){
+      return result.data.reply;
     }
     throw new Error('No content in response');
   }
@@ -484,7 +628,7 @@
   $('#chatSend').addEventListener('click', sendChat);
   $('#chatInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
 
-  loadChat();
+  // loadChat() is now called from initAppForUser() once signed in
 
   // ================= JOURNAL: REFLECT =================
   const reflectPrompts = [
@@ -541,7 +685,7 @@
     loadEntries();
   });
   $('#clearReflect').addEventListener('click', ()=>{ $('#reflectEntry').value=''; });
-  loadEntries();
+  // loadEntries() is now called from initAppForUser() once signed in
 
   // ================= JOURNAL: VISION BOARD =================
   async function loadVisionBoard(){
@@ -577,7 +721,7 @@
     $('#vbImg').value=''; $('#vbCap').value='';
     loadVisionBoard();
   });
-  loadVisionBoard();
+  // loadVisionBoard() is now called from initAppForUser() once signed in
 
   // ================= VOICE TO TEXT =================
   function setupVoiceInput(targetEl, buttonEl, isTextarea){
