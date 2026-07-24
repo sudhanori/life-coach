@@ -293,11 +293,11 @@
 
   // ---------- storage helpers ----------
   async function getVal(key, fallback){
-    try{ const res = await window.storage.get(key, false); if(!res) return fallback; return JSON.parse(res.value); }
+    try{ const raw = localStorage.getItem('lifecoach:'+key); if(raw===null) return fallback; return JSON.parse(raw); }
     catch(e){ return fallback; }
   }
   async function setVal(key, value){
-    try{ await window.storage.set(key, JSON.stringify(value), false); return true; }
+    try{ localStorage.setItem('lifecoach:'+key, JSON.stringify(value)); return true; }
     catch(e){ console.error('storage set failed', e); return false; }
   }
 
