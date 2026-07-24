@@ -56,6 +56,19 @@
 
   /* ---- COACHES TAB ---- */
   .persona-row{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+
+  .coaches-layout{display:flex;gap:20px;align-items:flex-start;}
+  .sessions-sidebar{width:190px;flex-shrink:0;max-height:560px;overflow-y:auto;}
+  .coaches-main{flex:1;min-width:0;}
+  .session-item{padding:10px 12px;border-radius:12px;cursor:pointer;font-size:0.8rem;margin-bottom:6px;background:var(--ink-soft);transition:background .15s ease;}
+  .session-item:hover{background:#EBDCF5;}
+  .session-item.active{background:var(--ink);color:#fff;}
+  .session-item .stitle{font-weight:600;display:block;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .session-item .sdate{font-size:0.68rem;opacity:0.75;}
+  @media (max-width:760px){
+    .coaches-layout{flex-direction:column;}
+    .sessions-sidebar{width:100%;max-height:150px;}
+  }
   .persona-card{flex:1;min-width:150px;border:2px solid transparent;background:var(--ink-soft);border-radius:20px;padding:16px;cursor:pointer;text-align:center;transition:all .15s ease;position:relative;}
   .persona-card:hover{transform:translateY(-2px);}
   .persona-card.active{border-color:var(--ink);background:#fff;box-shadow:0 8px 24px rgba(139,90,158,0.14);}
@@ -109,6 +122,7 @@
   .entry-item .meta{font-family:'Inter',sans-serif;font-size:0.7rem;color:var(--charcoal-soft);margin-bottom:3px;}
   .entry-item p{margin:0;font-size:0.88rem;white-space:pre-wrap;}
   .empty-note{font-size:0.85rem;color:var(--charcoal-soft);font-style:italic;padding:16px 0;}
+  .date-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:0.85rem;color:var(--charcoal);flex-wrap:wrap;}
 
   .vb-form{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;margin-bottom:22px;align-items:center;}
   .vb-form input, .vb-form select{padding:9px 13px;border:1px solid var(--paper-line);border-radius:999px;background:#fff;font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--charcoal);}
@@ -177,7 +191,6 @@
       <span class="signout-link" id="signOutBtn">Sign out</span>
     </div>
   </div>
-  <p class="section-note" style="margin:2px 0 14px;">A personalized AI life coach featuring three original coaching personas — The Visionary, The Corporate Strategist, and The Founder — each drawing on publicly known leadership philosophies around vision, strategy, and entrepreneurship. Includes contextual Gmail integration, a curated purchasing shelf, and persistent journaling.</p>
   <nav class="tabs">
     <button class="tab-btn active" data-tab="coaches">COACHES</button>
     <button class="tab-btn" data-tab="journal">JOURNAL</button>
@@ -191,39 +204,48 @@
       <h2 class="section-title">Talk it through</h2>
       <p class="section-note">Three original coaching personas, each with a distinct point of view. Check one, two, or all three to compare their advice on the same question.</p>
 
-      <div class="persona-row" id="personaRow"></div>
+      <div class="coaches-layout">
+        <aside class="sessions-sidebar">
+          <button class="btn ghost" id="newSessionBtn" type="button" style="width:100%;margin-bottom:10px;">+ New session</button>
+          <div id="sessionsList"></div>
+        </aside>
 
-      <button class="btn ghost" id="toggleContext" type="button" style="margin-bottom:14px;">+ Add background context</button>
-      <div id="contextBox" style="display:none;margin-bottom:20px;">
-        <p class="section-note" style="margin-bottom:8px;">Paste in anything relevant — an email you're mulling over, a Slack message, notes from a conversation — and your coach will factor it in. This stays saved only in this app; nothing is fetched automatically unless you connect it below.</p>
+        <div class="coaches-main">
+          <div class="persona-row" id="personaRow"></div>
 
-        <button class="btn ghost" id="connectGmail" type="button" style="margin-bottom:10px;">Connect Gmail</button>
-        <div id="gmailStatus" class="disclosure-inline" style="margin-bottom:10px;"></div>
-        <div id="gmailList" style="display:none;margin-bottom:16px;border:1px solid var(--paper-line);border-radius:14px;padding:12px;background:#FDF9F6;">
-          <p class="section-note" style="margin-bottom:8px;">Check any that are relevant — only checked ones get added to your context below. Only subject lines and short snippets are shown, never full email bodies.</p>
-          <div id="gmailItems"></div>
-          <div class="save-row">
-            <button class="btn" id="addSelectedEmails" type="button" style="background:var(--ink)">Add checked to context</button>
+          <button class="btn ghost" id="toggleContext" type="button" style="margin-bottom:14px;">+ Add background context</button>
+          <div id="contextBox" style="display:none;margin-bottom:20px;">
+            <p class="section-note" style="margin-bottom:8px;">Paste in anything relevant — an email you're mulling over, a Slack message, notes from a conversation — and your coach will factor it in. This stays saved only in this app; nothing is fetched automatically unless you connect it below.</p>
+
+            <button class="btn ghost" id="connectGmail" type="button" style="margin-bottom:10px;">Connect Gmail</button>
+            <div id="gmailStatus" class="disclosure-inline" style="margin-bottom:10px;"></div>
+            <div id="gmailList" style="display:none;margin-bottom:16px;border:1px solid var(--paper-line);border-radius:14px;padding:12px;background:#FDF9F6;">
+              <p class="section-note" style="margin-bottom:8px;">Check any that are relevant — only checked ones get added to your context below. Only subject lines and short snippets are shown, never full email bodies.</p>
+              <div id="gmailItems"></div>
+              <div class="save-row">
+                <button class="btn" id="addSelectedEmails" type="button" style="background:var(--ink)">Add checked to context</button>
+              </div>
+            </div>
+
+            <textarea class="entry" id="contextNotes" placeholder="Paste relevant context here..." style="min-height:90px;"></textarea>
+            <div class="save-row">
+              <button class="btn ghost" id="clearContext" type="button">Clear</button>
+              <button class="btn" id="saveContext" type="button" style="background:var(--ink)">Save context</button>
+            </div>
+            <div class="disclosure-inline" id="contextStatus"></div>
           </div>
-        </div>
 
-        <textarea class="entry" id="contextNotes" placeholder="Paste relevant context here..." style="min-height:90px;"></textarea>
-        <div class="save-row">
-          <button class="btn ghost" id="clearContext" type="button">Clear</button>
-          <button class="btn" id="saveContext" type="button" style="background:var(--ink)">Save context</button>
+          <div class="chat-window" id="chatWindow"></div>
+          <div class="chat-input-row">
+            <button class="mic-btn" id="micChat" type="button" title="Record voice">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg>
+            </button>
+            <input type="text" id="chatInput" placeholder="Type or record your message...">
+            <button class="btn" id="chatSend" style="background:var(--ink)">Send</button>
+          </div>
+          <div class="disclosure-inline">These are original, fictional coaching personas inspired by publicly known leadership and wellbeing concepts. They are not, and do not claim to be, any real individual.</div>
         </div>
-        <div class="disclosure-inline" id="contextStatus"></div>
       </div>
-
-      <div class="chat-window" id="chatWindow"></div>
-      <div class="chat-input-row">
-        <button class="mic-btn" id="micChat" type="button" title="Record voice">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/><path d="M8 21h8"/></svg>
-        </button>
-        <input type="text" id="chatInput" placeholder="Type or record your message...">
-        <button class="btn" id="chatSend" style="background:var(--ink)">Send</button>
-      </div>
-      <div class="disclosure-inline">These are original, fictional coaching personas inspired by publicly known leadership and wellbeing concepts. They are not, and do not claim to be, any real individual.</div>
     </section>
 
     <!-- JOURNAL -->
@@ -236,6 +258,12 @@
       <div class="subpanel active" id="sub-reflect">
         <h2 class="section-title">Reflect</h2>
         <p class="section-note">Prompts for career and for everything outside of it. Pick one, or write freely.</p>
+        <div class="date-nav">
+          <button class="btn ghost" id="prevJournalDay" type="button">← prev</button>
+          <span id="journalDateLabel"></span>
+          <button class="btn ghost" id="nextJournalDay" type="button">next →</button>
+          <button class="btn ghost" id="todayJournalDay" type="button" style="margin-left:auto;">Today</button>
+        </div>
         <div class="prompt-grid" id="reflectPrompts"></div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <button class="mic-btn" id="micReflect" type="button" title="Record voice">
@@ -455,6 +483,7 @@
 
   function initAppForUser(){
     // These are declared further down but hoisted within this closure, so this is safe to call here.
+    renderSessionsList();
     loadContext();
     loadChat();
     loadEntries();
@@ -479,6 +508,61 @@
       system:'You are "The Founder," an original, fictional coaching persona in a personal workbook app. Your coaching lens is on entrepreneurial mindset, brand-building, ownership of your own narrative, and replacing outdated assumptions about ambition, money, and work-life balance with a more self-directed way of thinking -- themes broadly associated with the modern self-made entrepreneur movement. You are NOT, and must never claim or imply that you are, any real living person -- not Emma Grede, nor anyone else. If asked whether you are a real person, state clearly and simply that you are an original coaching persona inspired by publicly known entrepreneurship ideas, not the individual herself. Speak with directness, confidence, and practical energy -- favoring concrete action and reframing limiting beliefs over abstract theory. Keep responses conversational and concise, generally 3-6 sentences unless the user asks for more depth. Never fabricate specific studies, quotes, or biographical claims about any real person.'
     }
   };
+  // ================= SESSIONS =================
+  let currentSessionId = 'default';
+
+  function chatKey(persona){
+    return currentSessionId === 'default' ? 'chat:'+persona : `chat:${currentSessionId}:${persona}`;
+  }
+
+  async function ensureDefaultSession(){
+    let sessions = await getVal('sessions:list', []);
+    if(!sessions.find(s=>s.id==='default')){
+      sessions.push({ id:'default', title:'Main conversation', createdAt: Date.now() });
+      await setVal('sessions:list', sessions);
+    }
+    return sessions;
+  }
+
+  async function renderSessionsList(){
+    const sessions = await ensureDefaultSession();
+    sessions.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const container = $('#sessionsList');
+    container.innerHTML = '';
+    sessions.forEach(s=>{
+      const item = document.createElement('div');
+      item.className = 'session-item' + (s.id===currentSessionId ? ' active' : '');
+      const dateStr = new Date(s.createdAt).toLocaleDateString(undefined,{month:'short', day:'numeric'});
+      item.innerHTML = `<span class="stitle">${s.title || 'New session'}</span><span class="sdate">${dateStr}</span>`;
+      item.addEventListener('click', async ()=>{
+        currentSessionId = s.id;
+        await renderSessionsList();
+        await loadChat();
+      });
+      container.appendChild(item);
+    });
+  }
+
+  $('#newSessionBtn').addEventListener('click', async ()=>{
+    const sessions = await getVal('sessions:list', []);
+    const id = 'sess_' + Date.now();
+    sessions.push({ id, title:'New session', createdAt: Date.now() });
+    await setVal('sessions:list', sessions);
+    currentSessionId = id;
+    await renderSessionsList();
+    await loadChat();
+  });
+
+  async function maybeAutoTitleSession(firstMessageText){
+    const sessions = await getVal('sessions:list', []);
+    const session = sessions.find(s=>s.id===currentSessionId);
+    if(session && (!session.title || session.title==='New session')){
+      session.title = firstMessageText.slice(0, 40) + (firstMessageText.length>40 ? '…' : '');
+      await setVal('sessions:list', sessions);
+      await renderSessionsList();
+    }
+  }
+
   let selectedPersonas = new Set(['visionary']);
 
   function renderPersonaRow(){
@@ -513,7 +597,7 @@
     const personas = Array.from(selectedPersonas);
     let merged = [];
     for(const key of personas){
-      const history = await getVal('chat:'+key, []);
+      const history = await getVal(chatKey(key), []);
       history.forEach(m=>merged.push(Object.assign({}, m, {persona:key})));
     }
     if(merged.length===0){
@@ -540,12 +624,50 @@
     if(win.querySelector('.empty-note')) win.innerHTML='';
     const div = document.createElement('div');
     div.className = 'msg '+role;
-    const who = role==='user' ? 'You' : (showLabel ? PERSONAS[personaKey].name : '');
-    const borderStyle = (role==='assistant' && showLabel) ? `style="border-left:3px solid ${PERSONAS[personaKey].color}"` : '';
+    let who = role==='user' ? 'You' : (showLabel ? PERSONAS[personaKey] && PERSONAS[personaKey].name : '');
+    let borderStyle = '';
+    if(role==='assistant' && personaKey==='combined'){
+      who = 'Combined guidance';
+      borderStyle = `style="border:1.5px solid var(--ink);background:var(--ink-soft);"`;
+    }else if(role==='assistant' && showLabel && personaKey){
+      borderStyle = `style="border-left:3px solid ${PERSONAS[personaKey].color}"`;
+    }
     div.innerHTML = `<div class="who">${who}</div><div class="bubble" ${borderStyle}></div>`;
     div.querySelector('.bubble').textContent = text;
     win.appendChild(div);
     if(scroll) win.scrollTop = win.scrollHeight;
+  }
+
+  function renderCombineButton(originalQuestion, results){
+    const win = $('#chatWindow');
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'margin:4px 0 14px;';
+    const btn = document.createElement('button');
+    btn.className = 'btn ghost';
+    btn.textContent = 'Combine into one';
+    wrap.appendChild(btn);
+    win.appendChild(wrap);
+    win.scrollTop = win.scrollHeight;
+
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      btn.textContent = 'Combining...';
+      renderMsg('assistant', '...blending perspectives...', 'combined', true, true);
+      try{
+        const composed = results.map(r=>`${PERSONAS[r.key].name} said:\n${r.reply}`).join('\n\n');
+        const synthesisSystem = 'You are synthesizing advice from several original, fictional coaching personas who each independently answered the same question. Combine their perspectives into one cohesive, practical recommendation. Briefly note where they agree or meaningfully differ, but stay concise (roughly 4-8 sentences) and actionable. Do not claim to be any real person.';
+        const combinedReply = await callClaude(synthesisSystem, [{
+          role:'user',
+          text: `The user asked: "${originalQuestion}"\n\nHere is what each coach said independently:\n\n${composed}\n\nSynthesize this into one cohesive, actionable recommendation.`
+        }]);
+        win.lastChild.remove();
+        renderMsg('assistant', combinedReply, 'combined', true, true);
+      }catch(e){
+        win.lastChild.remove();
+        renderMsg('assistant', "Couldn't combine these right now. Please try again.", 'combined', true, true);
+      }
+      wrap.remove();
+    });
   }
 
   // ================= CONTEXT NOTES =================
@@ -676,14 +798,15 @@
     const userTs = Date.now();
 
     renderMsg('user', text, null, true, showLabel);
+    maybeAutoTitleSession(text);
 
     // save the user message into each selected persona's own thread
     const histories = {};
     for(const key of personas){
-      const history = await getVal('chat:'+key, []);
+      const history = await getVal(chatKey(key), []);
       history.push({role:'user', text, ts:userTs, groupId});
       histories[key] = history;
-      await setVal('chat:'+key, history);
+      await setVal(chatKey(key), history);
     }
 
     const placeholderLabel = personas.length>1 ? 'Gathering perspectives' : PERSONAS[personas[0]].name;
@@ -699,7 +822,10 @@
       for(const {key, reply} of results){
         renderMsg('assistant', reply, key, true, showLabel);
         histories[key].push({role:'assistant', text:reply, ts:Date.now(), persona:key});
-        await setVal('chat:'+key, histories[key]);
+        await setVal(chatKey(key), histories[key]);
+      }
+      if(results.length>1){
+        renderCombineButton(text, results);
       }
     }catch(e){
       $('#chatWindow').lastChild.remove();
@@ -744,24 +870,42 @@
 
   function escapeHtml(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
 
+  let currentJournalDate = new Date();
+  function dayKey(d){ return d.toISOString().slice(0,10); }
+  function formatJournalLabel(d){
+    const today = dayKey(new Date());
+    const label = d.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric', year:'numeric'});
+    return dayKey(d)===today ? `Today — ${label}` : label;
+  }
+
   async function loadEntries(){
-    const entries = await getVal('journal:reflect', []);
+    $('#journalDateLabel').textContent = formatJournalLabel(currentJournalDate);
+    const allEntries = await getVal('journal:reflect', []);
+    const selectedDay = dayKey(currentJournalDate);
+    const entries = allEntries.filter(e => dayKey(new Date(e.date)) === selectedDay);
     const container = $('#reflectEntries');
     container.innerHTML='';
-    if(entries.length===0){ container.innerHTML='<p class="empty-note">No entries yet.</p>'; return; }
+    if(entries.length===0){ container.innerHTML='<p class="empty-note">No entries for this day yet.</p>'; return; }
     entries.slice().reverse().forEach(e=>{
       const div = document.createElement('div');
       div.className='entry-item';
-      div.innerHTML = `<div class="meta">${new Date(e.date).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div><p>${escapeHtml(e.text)}</p>`;
+      div.innerHTML = `<div class="meta">${new Date(e.date).toLocaleString(undefined,{hour:'numeric',minute:'2-digit'})}</div><p>${escapeHtml(e.text)}</p>`;
       container.appendChild(div);
     });
   }
+  $('#prevJournalDay').addEventListener('click', ()=>{ currentJournalDate.setDate(currentJournalDate.getDate()-1); loadEntries(); });
+  $('#nextJournalDay').addEventListener('click', ()=>{ currentJournalDate.setDate(currentJournalDate.getDate()+1); loadEntries(); });
+  $('#todayJournalDay').addEventListener('click', ()=>{ currentJournalDate = new Date(); loadEntries(); });
+
   $('#saveReflect').addEventListener('click', async ()=>{
     const ta = $('#reflectEntry');
     const text = ta.value.trim();
     if(!text) return;
     const entries = await getVal('journal:reflect', []);
-    entries.push({date:new Date().toISOString(), text});
+    // Save under the currently viewed day (noon, to avoid timezone edge cases), unless it's today, in which case use the real current time.
+    const isToday = dayKey(currentJournalDate) === dayKey(new Date());
+    const entryDate = isToday ? new Date() : new Date(currentJournalDate.getFullYear(), currentJournalDate.getMonth(), currentJournalDate.getDate(), 12, 0, 0);
+    entries.push({date: entryDate.toISOString(), text});
     await setVal('journal:reflect', entries);
     ta.value='';
     loadEntries();
